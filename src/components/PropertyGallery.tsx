@@ -17,11 +17,13 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
 
   return (
     <>
-      <div className="grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-card sm:h-[440px]">
+      <MobileCarousel images={images} title={title} onOpen={setOpenAt} />
+
+      <div className="hidden grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-card sm:grid sm:h-[440px]">
         <button
           type="button"
           onClick={() => setOpenAt(0)}
-          className="group relative col-span-4 row-span-2 h-64 sm:col-span-2 sm:h-full"
+          className="group relative col-span-2 row-span-2 h-full"
         >
           <Image
             src={images[0]}
@@ -39,7 +41,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
               key={src}
               type="button"
               onClick={() => setOpenAt(i + 1)}
-              className="group relative hidden h-full sm:block"
+              className="group relative h-full"
             >
               <Image
                 src={src}
@@ -70,6 +72,56 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
         ) : null}
       </AnimatePresence>
     </>
+  );
+}
+
+/** Phones: every photo in a swipeable row, with a counter. Tapping a photo opens the full-screen gallery. */
+function MobileCarousel({
+  images,
+  title,
+  onOpen,
+}: {
+  images: string[];
+  title: string;
+  onOpen: (i: number) => void;
+}) {
+  const row = useRef<HTMLDivElement>(null);
+  const [current, setCurrent] = useState(0);
+
+  return (
+    <div className="relative overflow-hidden rounded-card sm:hidden">
+      <div
+        ref={row}
+        onScroll={() => {
+          const el = row.current;
+          if (el) setCurrent(Math.round(el.scrollLeft / el.clientWidth));
+        }}
+        className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto"
+      >
+        {images.map((src, i) => (
+          <button
+            key={src}
+            type="button"
+            onClick={() => onOpen(i)}
+            className="relative h-72 w-full shrink-0 snap-center"
+            aria-label={`Open photo ${i + 1} of ${images.length}`}
+          >
+            <Image
+              src={src}
+              alt={`${title} — photo ${i + 1}`}
+              fill
+              priority={i === 0}
+              loading={i === 0 ? undefined : "lazy"}
+              sizes="100vw"
+              className="object-cover"
+            />
+          </button>
+        ))}
+      </div>
+      <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-ink/70 px-3 py-1 text-xs font-semibold text-white">
+        {current + 1} / {images.length}
+      </span>
+    </div>
   );
 }
 
